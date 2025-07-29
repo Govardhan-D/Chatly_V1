@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { SafeAreaProvider, SafeAreaView } from "react-native-safe-area-context";
 import {
   Pressable,
@@ -8,43 +8,30 @@ import {
   ActivityIndicator,
 } from "react-native";
 import useAuthStore from "../store/AuthStore";
-import { useNavigation } from "@react-navigation/native";
 
 export default function Login() {
-  const { error, loginWithOtp, loading, email } = useAuthStore();
-  const [inputEmail, setInputEmail] = useState("");
-  const [username, setUsername] = useState("");
-  const navigation = useNavigation();
-  useEffect(() => {
-    if (email) {
-      navigation.navigate("Verify");
-    }
-  }, [email]);
+  const { error, verifyOtp, loading, email } = useAuthStore();
+  const [otp, setOtp] = useState("");
   return (
     <SafeAreaProvider>
       <SafeAreaView style={styles.SafeAreaView}>
-        <Text style={styles.Header}>Welcome to Chatly</Text>
+        <Text style={styles.Header}>We have sent the otp to {email}</Text>
         <TextInput
-          placeholder="Username"
-          value={username}
-          onChangeText={setUsername}
+          placeholder="OTP"
+          value={otp}
+          onChangeText={setOtp}
+          keyboardType="numeric"
           style={styles.TextInput}
         />
 
-        <TextInput
-          placeholder="example@email.com"
-          value={inputEmail}
-          onChangeText={setInputEmail}
-          style={styles.TextInput}
-        />
         <Pressable
-          onPress={() => loginWithOtp(username, inputEmail)}
+          onPress={() => verifyOtp(email, otp)}
           style={styles.Pressable}
         >
           {loading ? (
             <ActivityIndicator size="small" color="#FFFFFF" />
           ) : (
-            <Text style={styles.ButtonText}>Get OTP Now</Text>
+            <Text style={styles.ButtonText}>Verify OTP</Text>
           )}
         </Pressable>
 
@@ -56,10 +43,10 @@ export default function Login() {
 
 const styles = StyleSheet.create({
   Header: {
-    fontSize: 32,
+    fontSize: 24,
     fontWeight: "bold",
     marginBottom: 32,
-    textAlign: "right",
+    textAlign: "center",
   },
   SafeAreaView: {
     flex: 1,

@@ -1,6 +1,7 @@
 import { create } from "zustand";
 import { AuthError, AuthOtpResponse, User } from "@supabase/supabase-js";
 import { supabase } from "../../lib/supabase";
+import { useNavigation } from "@react-navigation/native";
 
 async function loginWithOtp(
   username: string,
@@ -42,6 +43,7 @@ interface AuthStore {
   user: User | null;
   error: AuthError | null;
   loading: boolean;
+  email: string | null;
   loginWithOtp: (username: string, email: string) => Promise<void>;
   verifyOtp: (email: string, token: string) => Promise<void>;
 }
@@ -50,23 +52,26 @@ const useAuthStore = create<AuthStore>((set) => ({
   user: null,
   error: null,
   loading: false,
+  email: null,
 
   loginWithOtp: async (username: string, email: string) => {
     set({ loading: true, error: null });
     console.log("Sending OTP for:", username, email);
     const response = await loginWithOtp(username, email);
     if (response instanceof AuthError) {
-      set({ error: response, loading: false });
+      set({ error: response });
     } else {
-      set({ loading: false });
+      set({ email: email });
     }
+    set({ loading: false });
   },
+
   verifyOtp: async (email: string, token: string) => {
     const response = await verifyOtp(email, token);
     if (response instanceof AuthError) {
-      set({ error: response });
+      set({ error: response, loading: false });
     } else {
-      set({ user: response });
+      set({ user: response, loading: false });
     }
   },
 }));
