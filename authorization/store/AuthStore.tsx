@@ -1,7 +1,11 @@
 import { create } from "zustand";
-import { AuthError, AuthOtpResponse, User } from "@supabase/supabase-js";
+import {
+  AuthError,
+  AuthOtpResponse,
+  User,
+  Session,
+} from "@supabase/supabase-js";
 import { supabase } from "../../lib/supabase";
-import { useNavigation } from "@react-navigation/native";
 
 async function loginWithOtp(
   username: string,
@@ -41,24 +45,33 @@ async function verifyOtp(
 
 interface AuthStore {
   user: User | null;
+  session: Session | null;
   error: AuthError | null;
   loading: boolean;
   email: string | null;
   loginWithOtp: (username: string, email: string) => Promise<void>;
   verifyOtp: (email: string, token: string) => Promise<void>;
+  setSession: (session: Session | null) => void;
+  logout: () => Promise<void>;
 }
 
 const useAuthStore = create<AuthStore>((set) => ({
   user: null,
+  session: null,
   error: null,
   loading: false,
   email: null,
+
+  setSession: (session: Session | null) => {
+    set({ session: session, user: session?.user ?? null });
+  },
 
   loginWithOtp: async (username: string, email: string) => {
     set({ loading: true, error: null });
     console.log("Sending OTP for:", username, email);
     const response = await loginWithOtp(username, email);
     if (response instanceof AuthError) {
+      console.error("Login error:", response);
       set({ error: response });
     } else {
       set({ email: email });
@@ -67,13 +80,49 @@ const useAuthStore = create<AuthStore>((set) => ({
   },
 
   verifyOtp: async (email: string, token: string) => {
+    set({ loading: true });
     const response = await verifyOtp(email, token);
     if (response instanceof AuthError) {
       set({ error: response, loading: false });
     } else {
-      set({ user: response, loading: false });
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
+      set({
+        user: response,
+        session: session,
+        loading: false,
+        email: null,
+      });
+    }
+  },
+
+  logout: async () => {
+    set({ loading: true });
+    const { error } = await supabase.auth.signOut();
+    if (error) {
+      console.error("Logout error:", error);
+      set({ error: error, loading: false });
+    } else {
+      set({
+        user: null,
+        session: null,
+        loading: false,
+        error: null,
+        email: null,
+      });
     }
   },
 }));
+
+// Initialize session on app load
+supabase.auth.getSession().then(({ data: { session } }) => {
+  useAuthStore.getState().setSession(session);
+});
+
+// Listen for auth changes
+supabase.auth.onAuthStateChange((_event, session) => {
+  useAuthStore.getState().setSession(session);
+});
 
 export default useAuthStore;
