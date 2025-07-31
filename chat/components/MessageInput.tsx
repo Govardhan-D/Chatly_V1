@@ -1,4 +1,4 @@
-import { View, TextInput } from "react-native";
+import { View, TextInput, TouchableOpacity } from "react-native";
 import MaterialCommunityIcons from "react-native-vector-icons/MaterialCommunityIcons";
 import { sendMessage } from "../../lib/util";
 import { useState } from "react";
@@ -29,12 +29,9 @@ export default function MessageInput({ chatId }: { chatId: string }) {
         value={content}
         onChangeText={handleChange}
       />
-      <MaterialCommunityIcons
-        name="send-circle"
-        size={44}
-        color="#1DAB61"
-        onPress={handleSend}
-      />
+      <TouchableOpacity onPress={handleSend}>
+        <MaterialCommunityIcons name="send-circle" size={44} color="#1DAB61" />
+      </TouchableOpacity>
     </View>
   );
 }

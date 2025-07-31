@@ -1,29 +1,54 @@
 import { useEffect } from "react";
 import { useRoute } from "@react-navigation/native";
-import { View, Text } from "react-native";
+import {
+  View,
+  Text,
+  StyleSheet,
+  KeyboardAvoidingView,
+  Platform,
+} from "react-native";
 import { SafeAreaProvider, SafeAreaView } from "react-native-safe-area-context";
 import MessageInput from "../components/MessageInput";
 import ChatHistory from "../components/ChatHistory";
+import ChatHeader from "../components/ChatHeader";
 
-interface ChatScreenProps {
-  receiverID: string;
-}
-export default function ChatScreen({ receiverID }: ChatScreenProps) {
+export default function ChatScreen() {
   const route = useRoute();
   const { userId } = route.params as { userId: string };
-  useEffect(() => {
-    // Fetch chat messages or user data based on userId
-  }, [userId]);
+
   return (
     <SafeAreaProvider>
-      <SafeAreaView>
-        <View>
-          <Text>Chat with {userId}</Text>
-          <ChatHistory />
-          <MessageInput chatId={userId} />
-          {/* Render chat messages and input field here */}
-        </View>
+      <SafeAreaView style={styles.safeArea}>
+        <KeyboardAvoidingView
+          behavior={Platform.OS === "ios" ? "padding" : "height"}
+          style={styles.keyboardView}
+          keyboardVerticalOffset={Platform.OS === "ios" ? 90 : 0}
+        >
+          <ChatHeader userId={userId} />
+          <View style={styles.chatContainer}>
+            <ChatHistory />
+            <MessageInput chatId={userId} />
+          </View>
+        </KeyboardAvoidingView>
       </SafeAreaView>
     </SafeAreaProvider>
   );
 }
+
+const styles = StyleSheet.create({
+  safeArea: {
+    flex: 1,
+    backgroundColor: "#fff",
+    padding: 16,
+  },
+  keyboardView: {
+    flex: 1,
+  },
+  chatContainer: {
+    flex: 1,
+  },
+  header: {
+    fontSize: 18,
+    fontWeight: "bold",
+  },
+});
