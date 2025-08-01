@@ -4,9 +4,11 @@ import AntDesign from "react-native-vector-icons/AntDesign";
 import { View, Text } from "react-native";
 import { getUserById } from "../../lib/util";
 import { TouchableOpacity } from "react-native";
+import { useNavigation } from "@react-navigation/native";
 
 export default function ChatHeader({ userId }: { userId: string }) {
   const [chatName, setChatname] = useState<string | null>(null);
+  const navigation = useNavigation();
   useEffect(() => {
     const fetchChatName = async () => {
       try {
@@ -24,9 +26,13 @@ export default function ChatHeader({ userId }: { userId: string }) {
 
     fetchChatName();
   }, [userId]);
+
+  const handleBackPress = () => {
+    navigation.navigate("Main");
+  };
   return (
     <View style={styles.container}>
-      <TouchableOpacity>
+      <TouchableOpacity onPress={handleBackPress}>
         <AntDesign name="arrowleft" color="#000" size={24} />
       </TouchableOpacity>
 

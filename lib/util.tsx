@@ -1,6 +1,13 @@
 import { supabase } from "./supabase";
+import { Database } from "../supabase-types";
 
-export async function getContacts() {
+type Contact = Database["public"]["Tables"]["contacts"]["Row"];
+type User = Database["public"]["Tables"]["users"]["Row"];
+type Message = Database["public"]["Tables"]["messages"]["Row"];
+type LastMessage =
+  Database["public"]["Functions"]["get_last_message_with_users"]["Returns"][0];
+
+export async function getContacts(): Promise<Contact[]> {
   try {
     const {
       data: { user },
@@ -19,21 +26,20 @@ export async function getContacts() {
       throw error;
     }
 
-    return contacts;
+    return contacts || [];
   } catch (error) {
     console.error("Error fetching contacts:", error);
     throw error;
   }
 }
 
-export async function getUserById(userId: string) {
-  console.log("Fetching user by ID:", userId);
+export async function getUserById(userId: string): Promise<User> {
   try {
     const { data: userData, error } = await supabase
       .from("users")
       .select("*")
       .eq("userid", userId)
-      .maybeSingle(); // ✅ Handles zero/one row safely
+      .maybeSingle();
 
     if (error) {
       throw error;
@@ -50,7 +56,10 @@ export async function getUserById(userId: string) {
   }
 }
 
-export async function sendMessage(receiverId: string, content: string) {
+export async function sendMessage(
+  receiverId: string,
+  content: string
+): Promise<Message> {
   try {
     const {
       data: { user },
@@ -83,4 +92,14 @@ export async function sendMessage(receiverId: string, content: string) {
   }
 }
 
-// test commit
+export async function getLastMessage(
+  userId1: string,
+  userId2: string
+): Promise<{ data: LastMessage | null; error: Error | null }> {
+  const { data, error } = await supabase.rpc("get_last_message_with_users", {
+    user1_id: userId1,
+    user2_id: userId2,
+  });
+
+  return { data: data?.[0] || null, error };
+}
