@@ -39,12 +39,12 @@ export default function MessageInput({ chatId }: { chatId: string }) {
 import { StyleSheet } from "react-native";
 const styles = StyleSheet.create({
   container: {
-    marginTop: 25,
     flexDirection: "row",
     alignItems: "center",
     width: "100%",
     gap: 5,
     height: "auto",
+    padding: 16,
   },
   input: {
     flex: 1,

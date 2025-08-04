@@ -4,6 +4,7 @@ import ChatListItem from "../components/ChatListItem";
 import useAuthStore from "../../authorization/store/AuthStore";
 import { useEffect, useState } from "react";
 import { getContacts } from "../../lib/util";
+import { FlashList } from "@shopify/flash-list";
 export default function ChatList() {
   const { logout } = useAuthStore();
   const [contacts, setContacts] = useState([]);
@@ -13,7 +14,7 @@ export default function ChatList() {
       try {
         const contacts = await getContacts();
         setContacts(contacts);
-        console.log("Fetched contacts:", contacts[0]);
+        console.log("Fetched contacts:", contacts);
       } catch (error) {
         console.error("Error fetching contacts:", error);
       }
@@ -25,17 +26,29 @@ export default function ChatList() {
   return (
     <SafeAreaProvider>
       <SafeAreaView style={styles.SafeAreaView}>
-        <View style={styles.View}>
+        <View>
           <Text style={styles.Header}>Chat</Text>
         </View>
-        <ChatListItem chat_user_id={contacts[0]?.contactuserid} />
-        <Pressable
-          onPress={() => logout()}
-          style={{ padding: 10, backgroundColor: "#007AFF", borderRadius: 5 }}
-        >
-          <Text style={{ color: "#FFFFFF", textAlign: "center" }}>Logout</Text>
-        </Pressable>
-
+        <View style={styles.container}>
+          <FlashList
+            data={contacts}
+            renderItem={({ item }) => <ChatListItem contact={item} />}
+            estimatedItemSize={50}
+            keyExtractor={(item) => item.contactuserid}
+            contentContainerStyle={styles.listContent}
+            ItemSeparatorComponent={() => (
+              <View
+                style={{
+                  borderBottomColor: "#c0c0c0ff",
+                  borderBottomWidth: 1,
+                  marginBottom: 10,
+                  marginTop: 3,
+                  width: "100%",
+                }}
+              />
+            )}
+          />
+        </View>
         {/* Chat list content goes here */}
       </SafeAreaView>
     </SafeAreaProvider>
@@ -45,20 +58,17 @@ export default function ChatList() {
 const styles = StyleSheet.create({
   SafeAreaView: {
     flex: 1,
-    backgroundColor: "#FFFFFF",
-    alignItems: "center",
-    justifyContent: "flex-start",
-    paddingHorizontal: 16,
-    paddingTop: 5,
-  },
-  View: {
-    flex: 1,
-    flexDirection: "row",
-    justifyContent: "space-between",
-    width: "100%",
+    padding: 16,
   },
   Header: {
     fontWeight: "bold",
     fontSize: 33.33,
   },
+  container: {
+    flex: 1,
+    width: "100%",
+    height: 300,
+    paddingTop: 10,
+  },
+  listContent: {},
 });

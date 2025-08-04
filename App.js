@@ -2,23 +2,43 @@ import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import { StatusBar } from "react-native";
 import { NavigationContainer } from "@react-navigation/native";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
+import Ionicons from "react-native-vector-icons/Ionicons";
 
 import Login from "./authorization/screens/Login";
 import Verify from "./authorization/screens/Verify";
 import ChatList from "./chatlist/screens/ChatList";
 import ChatScreen from "./chat/screens/ChatScreen";
+import Profile from "./profile/screens/Profile";
+import { useRealTimeSync } from "./hooks/useRealTimeSync";
 
-import { useEffect } from "react";
+import { use, useEffect } from "react";
 import useAuthStore from "./authorization/store/AuthStore";
-
-import { SafeAreaProvider, SafeAreaView } from "react-native-safe-area-context";
 
 const Tab = createBottomTabNavigator();
 
 function TabNavigator() {
   return (
-    <Tab.Navigator screenOptions={{ headerShown: false }}>
+    <Tab.Navigator
+      screenOptions={({ route }) => ({
+        headerShown: false,
+        tabBarIcon: ({ focused, color, size }) => {
+          let iconName;
+
+          if (route.name === "Chats") {
+            iconName = focused ? "chatbubbles" : "chatbubbles-outline";
+          } else if (route.name === "Profile") {
+            iconName = focused ? "person" : "person-outline";
+          }
+
+          // You can return any component that you like here!
+          return <Ionicons name={iconName} size={size} color={color} />;
+        },
+        tabBarActiveTintColor: "#1DAB61",
+        tabBarInactiveTintColor: "#767779",
+      })}
+    >
       <Tab.Screen name="Chats" component={ChatList} />
+      <Tab.Screen name="Profile" component={Profile} />
     </Tab.Navigator>
   );
 }
@@ -67,6 +87,8 @@ export default function App() {
   useEffect(() => {
     console.log("Session state:", session ? "Logged in" : "Logged out");
   }, [session]);
+  console.log("App component rendered. ");
+  useRealTimeSync();
 
   return (
     <NavigationContainer>

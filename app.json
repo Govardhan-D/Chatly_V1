@@ -7,13 +7,15 @@
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
     "newArchEnabled": true,
+    "jsEngine": "hermes",
     "splash": {
       "image": "./assets/splash-icon.png",
       "resizeMode": "contain",
       "backgroundColor": "#ffffff"
     },
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "com.anonymous.Chatly-V1"
     },
     "android": {
       "adaptiveIcon": {
@@ -21,13 +23,17 @@
         "backgroundColor": "#ffffff"
       },
       "edgeToEdgeEnabled": true,
-      "package": "com.anonymous.Chatly_V1"
+      "package": "com.anonymous.Chatly_V1",
+      "newArchEnabled": true
     },
     "web": {
       "favicon": "./assets/favicon.png"
     },
-    "plugins": [
-      "expo-secure-store"
-    ]
+    "plugins": ["expo-secure-store"],
+    "extra": {
+      "eas": {
+        "projectId": "7eec4a94-0e59-4d2d-807d-ac8fc180ca76"
+      }
+    }
   }
 }

@@ -26,7 +26,7 @@ export default function ChatScreen() {
         >
           <ChatHeader userId={userId} />
           <View style={styles.chatContainer}>
-            <ChatHistory />
+            <ChatHistory chatId={userId} />
             <MessageInput chatId={userId} />
           </View>
         </KeyboardAvoidingView>
@@ -39,7 +39,6 @@ const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
     backgroundColor: "#fff",
-    padding: 16,
   },
   keyboardView: {
     flex: 1,

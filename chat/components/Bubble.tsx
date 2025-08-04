@@ -1,6 +1,9 @@
 import { View, Text, StyleSheet } from "react-native";
 import { Database } from "../../supabase-types";
 import useAuthStore from "../../authorization/store/AuthStore";
+import { supabase } from "../../lib/supabase";
+import { useEffect } from "react";
+import MessageTick from "../../chatlist/components/MessageTick";
 
 type Message = Database["public"]["Tables"]["messages"]["Row"];
 
@@ -8,6 +11,25 @@ export default function MessageBubble({ message }: { message: Message }) {
   const { user } = useAuthStore();
   const isSentByMe = message.senderid === user?.id;
 
+  const updateMessageStatus = async () => {
+    if (message.status != "seen") {
+      supabase
+        .from("messages")
+        .update({ status: "seen" })
+        .eq("messageid", message.messageid)
+        .then(({ error }) => {
+          if (error) {
+            console.error("Failed to update status to delivered:", error);
+          }
+          console.log("No error");
+        });
+    }
+  };
+  useEffect(() => {
+    if (!isSentByMe && message.status !== "seen") {
+      updateMessageStatus();
+    }
+  }, [message.status]);
   return (
     <View
       style={[
@@ -22,6 +44,15 @@ export default function MessageBubble({ message }: { message: Message }) {
         ]}
       >
         <Text style={styles.text}>{message.content}</Text>
+        <View style={styles.statusContainer}>
+          <Text style={styles.timestamp}>
+            {new Date(message.timestamp).toLocaleTimeString([], {
+              hour: "2-digit",
+              minute: "2-digit",
+            })}
+          </Text>
+          {isSentByMe && <MessageTick status={message.status} />}
+        </View>
       </View>
     </View>
   );
@@ -53,8 +84,18 @@ const styles = StyleSheet.create({
     backgroundColor: "#fff",
     borderBottomLeftRadius: 4,
   },
+  statusContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginTop: 2,
+    alignSelf: "flex-end",
+  },
   text: {
     fontSize: 16,
     color: "#000",
+  },
+  timestamp: {
+    fontSize: 11,
+    color: "#767779",
   },
 });

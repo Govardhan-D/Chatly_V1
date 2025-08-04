@@ -3,33 +3,37 @@ import { useEffect, useState } from "react";
 import { getUserById } from "../../lib/util";
 import { Database } from "../../supabase-types";
 import { useNavigation } from "@react-navigation/native";
-export default function ChatListItem({
-  chat_user_id,
-}: {
-  chat_user_id: string;
-}) {
+import { getLastMessage } from "../../lib/util";
+import useAuthStore from "../../authorization/store/AuthStore";
+import { useMessageStore } from "../../stores/MessageStore";
+import MessageTick from "./MessageTick";
+
+type LastMessage =
+  Database["public"]["Functions"]["get_last_message_with_users"]["Returns"][0];
+type Contact = Database["public"]["Tables"]["contacts"]["Row"];
+
+export default function ChatListItem({ contact }: { contact: Contact }) {
+  const { user } = useAuthStore();
   const navigation = useNavigation();
-  const [userData, setUserData] = useState<
-    Database["public"]["Tables"]["users"]["Row"] | null
-  >(null);
-  useEffect(() => {
-    const fetchUserData = async () => {
-      try {
-        const userData = await getUserById(chat_user_id);
-        setUserData(userData);
-        console.log("Fetched user data:", userData);
-      } catch (error) {
-        console.error("Error fetching user data:", error);
-      }
-    };
-    fetchUserData();
-  }, [chat_user_id]);
+  const allMessages = useMessageStore((state) => state.messages);
+
+  // Filter messages exchanged with this contact
+  const contactMessages = allMessages.filter(
+    (msg) =>
+      (msg.senderid === user.id && msg.receiverid === contact.contactuserid) ||
+      (msg.senderid === contact.contactuserid && msg.receiverid === user.id)
+  );
+
+  // Get last message by timestamp
+  const lastMessage = contactMessages.sort(
+    (a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()
+  )[0];
 
   return (
     <TouchableOpacity
       style={styles.MainView}
       onPress={() => {
-        navigation.navigate("ChatScreen", { userId: chat_user_id });
+        navigation.navigate("ChatScreen", { userId: contact.contactuserid });
       }}
     >
       <Image
@@ -41,11 +45,22 @@ export default function ChatListItem({
 
       <View style={styles.TextContainer}>
         <Text style={{ fontWeight: "600", fontSize: 16 }}>
-          {userData?.username}
+          {contact.nickname}
         </Text>
         <Text numberOfLines={1} ellipsizeMode="tail">
-          Lorem ipsum dolor sit amet, consectetur adipiscing elit. Donec a diam
-          lectus. Sed sit amet ipsum mauris.
+          {lastMessage ? (
+            lastMessage.senderid === user.id ? (
+              <View style={{ flexDirection: "row", alignItems: "center" }}>
+                <MessageTick status={lastMessage.status} />
+
+                <Text style={{ color: "#767779" }}>{lastMessage.content}</Text>
+              </View>
+            ) : (
+              <Text style={{ color: "#767779" }}>{lastMessage.content}</Text>
+            )
+          ) : (
+            ""
+          )}
         </Text>
       </View>
     </TouchableOpacity>

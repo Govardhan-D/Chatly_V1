@@ -1,98 +1,59 @@
 import { supabase } from "../../lib/supabase";
 import { useEffect, useRef, useState } from "react";
 import { Database } from "../../supabase-types";
-import { View, Text, StyleSheet, Dimensions } from "react-native";
+import {
+  View,
+  Text,
+  StyleSheet,
+  Dimensions,
+  ImageBackground,
+} from "react-native";
 import MessageBubble from "./Bubble";
 import { FlashList } from "@shopify/flash-list";
-import { FlatList } from "react-native";
+import { useMessageStore } from "../../stores/MessageStore";
+import { images } from "../../assets/images/images";
+
 type Message = Database["public"]["Tables"]["messages"]["Row"];
 
-export default function ChatHistory() {
-  const [messages, setMessages] = useState([]);
-  const listRef = useRef<FlashList<Message[]>>(null);
+interface ChatHistoryProps {
+  chatId: string;
+}
 
-  useEffect(() => {
-    const channel = supabase
-      .channel("messages-channel")
-      .on(
-        "postgres_changes",
-        {
-          event: "*", // Listen to all events (INSERT, UPDATE, DELETE)
-          schema: "public",
-          table: "messages",
-        },
-        (payload) => {
-          console.log("Message change detected:", payload);
+export default function ChatHistory({ chatId }: ChatHistoryProps) {
+  const listRef = useRef<FlashList<Message>>(null);
 
-          switch (payload.eventType) {
-            case "INSERT":
-              setMessages((prev) => [...prev, payload.new as Message]);
-              break;
-            case "UPDATE":
-              setMessages((prev) =>
-                prev.map((msg) =>
-                  msg.messageid === payload.new.messageid
-                    ? (payload.new as Message)
-                    : msg
-                )
-              );
-              break;
-            case "DELETE":
-              setMessages((prev) =>
-                prev.filter((msg) => msg.messageid !== payload.old.messageid)
-              );
-              break;
-          }
-        }
-      )
-      .subscribe();
+  const allMessages = useMessageStore((state) => state.messages);
+  const messages = allMessages.filter(
+    (msg) => msg.senderid === chatId || msg.receiverid === chatId
+  );
+  if (messages.length > 0) {
+    setTimeout(() => {
+      listRef.current?.scrollToEnd({ animated: true });
+    }, 100);
+  }
 
-    // Fetch existing messages on component mount
-    const fetchMessages = async () => {
-      const { data, error } = await supabase
-        .from("messages")
-        .select("*")
-        .order("timestamp", { ascending: true });
-
-      if (error) {
-        console.error("Error fetching messages:", error);
-        return;
-      }
-
-      setMessages(data);
-    };
-
-    fetchMessages();
-
-    return () => {
-      supabase.removeChannel(channel);
-    };
-  }, []);
-
-  useEffect(() => {
-    if (messages.length > 0) {
-      setTimeout(() => {
-        listRef.current?.scrollToEnd({ animated: true });
-      }, 100);
-    }
-  }, [messages]);
-
-  console.log(messages);
+  console.log(allMessages);
 
   return (
-    <View style={styles.container}>
-      {messages.length == 0 ? (
-        <Text>No Messages</Text>
-      ) : (
-        <FlashList
-          ref={listRef}
-          contentContainerStyle={styles.listContent}
-          data={messages}
-          renderItem={({ item }) => <MessageBubble message={item} />}
-          keyExtractor={(item) => item.messageid.toString()}
-        />
-      )}
-    </View>
+    <ImageBackground
+      source={images.chatBg}
+      resizeMode="cover"
+      style={{ flex: 1, justifyContent: "center", alignItems: "center" }}
+    >
+      <View style={styles.container}>
+        {allMessages.length == 0 ? (
+          <Text>No Messages</Text>
+        ) : (
+          <FlashList
+            ref={listRef}
+            contentContainerStyle={styles.listContent}
+            data={messages}
+            renderItem={({ item }) => <MessageBubble message={item} />}
+            keyExtractor={(item) => item.messageid.toString()}
+          />
+        )}
+      </View>
+    </ImageBackground>
   );
 }
 
@@ -103,7 +64,7 @@ const styles = StyleSheet.create({
     width: "100%",
   },
   listContent: {
-    paddingHorizontal: 8,
     paddingVertical: 4,
+    paddingHorizontal: 8,
   },
 });

@@ -21,7 +21,6 @@ export async function getContacts(): Promise<Contact[]> {
       .from("contacts")
       .select("*")
       .eq("userid", user.id);
-
     if (error) {
       throw error;
     }

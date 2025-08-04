@@ -4,6 +4,7 @@ import { supabase } from "../lib/supabase";
 import { useMessageStore } from "../stores/MessageStore";
 import { Database } from "../supabase-types";
 import { mmkvStorage } from "../lib/MMKV";
+import useAuthStore from "../authorization/store/AuthStore";
 
 const STORAGE_KEY = "messages";
 
@@ -12,6 +13,7 @@ type Message = Database["public"]["Tables"]["messages"]["Row"];
 export const useRealTimeSync = () => {
   const { messages, setMessages, addMessage, updateMessage, deleteMessage } =
     useMessageStore();
+  const { user } = useAuthStore();
 
   useEffect(() => {
     const hydrateMessages = async () => {
@@ -60,6 +62,32 @@ export const useRealTimeSync = () => {
               const newMessage = payload.new as Message;
               addMessage(newMessage);
               updatedMessages = [...updatedMessages, newMessage];
+
+              if (
+                newMessage.receiverid === user.id &&
+                newMessage.status !== "delivered"
+              ) {
+                console.log(
+                  "Attempting to update:",
+                  newMessage.messageid,
+                  newMessage.status
+                );
+
+                supabase
+                  .from("messages")
+                  .update({ status: "delivered" })
+                  .eq("messageid", newMessage.messageid)
+                  .then(({ error }) => {
+                    if (error) {
+                      console.error(
+                        "Failed to update status to delivered:",
+                        error
+                      );
+                    }
+                    console.log("No error");
+                  });
+              }
+
               break;
             }
 

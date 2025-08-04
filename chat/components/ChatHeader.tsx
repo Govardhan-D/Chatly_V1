@@ -13,6 +13,7 @@ export default function ChatHeader({ userId }: { userId: string }) {
     const fetchChatName = async () => {
       try {
         const user = await getUserById(userId);
+        console.log("Fetched user:", user);
         if (user) {
           setChatname(user.username);
         } else {
@@ -26,7 +27,6 @@ export default function ChatHeader({ userId }: { userId: string }) {
 
     fetchChatName();
   }, [userId]);
-
   const handleBackPress = () => {
     navigation.navigate("Main");
   };
@@ -43,8 +43,8 @@ export default function ChatHeader({ userId }: { userId: string }) {
 const styles = StyleSheet.create({
   container: {
     flexDirection: "row",
-    height: 36,
     alignItems: "center",
+    padding: 16,
   },
   header: {
     fontSize: 18,
