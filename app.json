@@ -29,7 +29,10 @@
     "web": {
       "favicon": "./assets/favicon.png"
     },
-    "plugins": ["expo-secure-store"],
+    "plugins": [
+      "expo-secure-store",
+      "expo-audio"
+    ],
     "extra": {
       "eas": {
         "projectId": "7eec4a94-0e59-4d2d-807d-ac8fc180ca76"

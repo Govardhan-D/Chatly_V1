@@ -2,8 +2,12 @@ import { View, TextInput, TouchableOpacity } from "react-native";
 import MaterialCommunityIcons from "react-native-vector-icons/MaterialCommunityIcons";
 import { sendMessage } from "../../lib/util";
 import { useState } from "react";
+import { useAudioPlayer } from "expo-audio";
+import { sound } from "../../assets/sounds/sound";
 
 export default function MessageInput({ chatId }: { chatId: string }) {
+  const player = useAudioPlayer(sound.pop);
+
   const [content, setContent] = useState("");
   const handleChange = (text: string) => {
     setContent(text);
@@ -14,6 +18,8 @@ export default function MessageInput({ chatId }: { chatId: string }) {
 
     try {
       const message = await sendMessage(receiverId, content);
+      player.seekTo(0);
+      player.play();
       console.log("Message sent successfully:", message);
     } catch (error) {
       console.error("Error sending message:", error);
