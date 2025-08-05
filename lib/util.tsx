@@ -1,5 +1,7 @@
 import { supabase } from "./supabase";
 import { Database } from "../supabase-types";
+import * as FileSystem from "expo-file-system";
+import { decode } from "base64-arraybuffer";
 
 type Contact = Database["public"]["Tables"]["contacts"]["Row"];
 type User = Database["public"]["Tables"]["users"]["Row"];
@@ -57,7 +59,8 @@ export async function getUserById(userId: string): Promise<User> {
 
 export async function sendMessage(
   receiverId: string,
-  content: string
+  content: string,
+  mediaUrl?: string
 ): Promise<Message> {
   try {
     const {
@@ -74,6 +77,7 @@ export async function sendMessage(
         content: content,
         senderid: user.id,
         receiverid: receiverId,
+        mediaurl: mediaUrl || null,
         timestamp: new Date().toISOString(),
         status: "sent",
       })
@@ -102,3 +106,36 @@ export async function getLastMessage(
 
   return { data: data?.[0] || null, error };
 }
+
+export const uploadImage = async (file, chatId) => {
+  const filename = `${Date.now()}_${file.name}`;
+  const fileUri = file.uri;
+  const base64file = await convertFileToBase64(fileUri);
+
+  const { data, error } = await supabase.storage
+    .from("chat-uploads")
+    .upload(`uploads/${filename}`, decode(base64file), {
+      contentType: file.type,
+    });
+  if (error) {
+    console.error("Supabase upload error:", error);
+    throw error;
+  }
+
+  const { data: urlData } = supabase.storage
+    .from("chat-uploads")
+    .getPublicUrl(data.path);
+  console.log(urlData.publicUrl);
+  return urlData.publicUrl;
+};
+
+const convertFileToBase64 = async (fileUri) => {
+  try {
+    const base64String = await FileSystem.readAsStringAsync(fileUri, {
+      encoding: FileSystem.EncodingType.Base64,
+    });
+    return base64String;
+  } catch (error) {
+    console.error("Error converting file to base64:", error);
+  }
+};

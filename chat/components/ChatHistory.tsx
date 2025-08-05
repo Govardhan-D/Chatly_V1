@@ -32,8 +32,6 @@ export default function ChatHistory({ chatId }: ChatHistoryProps) {
     }, 100);
   }
 
-  console.log(allMessages);
-
   return (
     <ImageBackground
       source={images.chatBg}
@@ -50,6 +48,7 @@ export default function ChatHistory({ chatId }: ChatHistoryProps) {
             data={messages}
             renderItem={({ item }) => <MessageBubble message={item} />}
             keyExtractor={(item) => item.messageid.toString()}
+            estimatedItemSize={65}
           />
         )}
       </View>

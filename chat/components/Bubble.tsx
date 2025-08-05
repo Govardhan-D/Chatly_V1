@@ -1,4 +1,4 @@
-import { View, Text, StyleSheet } from "react-native";
+import { View, Text, StyleSheet, Image } from "react-native";
 import { Database } from "../../supabase-types";
 import useAuthStore from "../../authorization/store/AuthStore";
 import { supabase } from "../../lib/supabase";
@@ -43,6 +43,14 @@ export default function MessageBubble({ message }: { message: Message }) {
           isSentByMe ? styles.sentBubble : styles.receivedBubble,
         ]}
       >
+        {message.mediaurl != null && (
+          <Image
+            source={{
+              uri: message.mediaurl,
+            }}
+            style={styles.media}
+          />
+        )}
         <Text style={styles.text}>{message.content}</Text>
         <View style={styles.statusContainer}>
           <Text style={styles.timestamp}>
@@ -63,6 +71,11 @@ const styles = StyleSheet.create({
     width: "100%",
     paddingHorizontal: 10,
     marginVertical: 4,
+  },
+  media: {
+    width: 200,
+    height: 200,
+    borderRadius: 16,
   },
   sentContainer: {
     alignItems: "flex-end",
