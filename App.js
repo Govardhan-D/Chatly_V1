@@ -10,6 +10,8 @@ import ChatList from "./chatlist/screens/ChatList";
 import ChatScreen from "./chat/screens/ChatScreen";
 import Profile from "./profile/screens/Profile";
 import { useRealTimeSync } from "./hooks/useRealTimeSync";
+import { setupPowerSync, powersync } from "./lib/powersync/system";
+import { PowerSyncProvider } from "@powersync/react-native";
 
 import { use, useEffect } from "react";
 import useAuthStore from "./authorization/store/AuthStore";
@@ -86,7 +88,8 @@ export default function App() {
 
   useEffect(() => {
     console.log("Session state:", session ? "Logged in" : "Logged out");
-  }, [session]);
+    setupPowerSync();
+  }, []);
   console.log("App component rendered. ");
   useRealTimeSync();
 

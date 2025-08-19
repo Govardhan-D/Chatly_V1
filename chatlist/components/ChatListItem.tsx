@@ -1,30 +1,26 @@
 import { Text, View, StyleSheet, Image, TouchableOpacity } from "react-native";
-import { useEffect, useState } from "react";
-import { getUserById } from "../../lib/util";
-import { Database } from "../../supabase-types";
 import { useNavigation } from "@react-navigation/native";
-import { getLastMessage } from "../../lib/util";
 import useAuthStore from "../../authorization/store/AuthStore";
 import { useMessageStore } from "../../stores/MessageStore";
 import MessageTick from "./MessageTick";
+import { PowerSyncDatabase } from "../../lib/powersync/powersync-schema";
+import { Database } from "../../supabase-types";
 
 type LastMessage =
   Database["public"]["Functions"]["get_last_message_with_users"]["Returns"][0];
-type Contact = Database["public"]["Tables"]["contacts"]["Row"];
+type Contact = PowerSyncDatabase["contacts"];
 
 export default function ChatListItem({ contact }: { contact: Contact }) {
   const { user } = useAuthStore();
   const navigation = useNavigation();
   const allMessages = useMessageStore((state) => state.messages);
 
-  // Filter messages exchanged with this contact
   const contactMessages = allMessages.filter(
     (msg) =>
       (msg.senderid === user.id && msg.receiverid === contact.contactuserid) ||
       (msg.senderid === contact.contactuserid && msg.receiverid === user.id)
   );
 
-  // Get last message by timestamp
   const lastMessage = contactMessages.sort(
     (a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()
   )[0];

@@ -8,8 +8,7 @@ import * as DocumentPicker from "expo-document-picker";
 
 export default function MessageInput({ chatId }: { chatId: string }) {
   const player = useAudioPlayer(sound.pop);
-
-  const [content, setContent] = useState("");
+  const [content, setContent] = useState<string>("");
   const [files, setFiles] =
     useState<DocumentPicker.DocumentPickerResult | null>(null);
 
@@ -66,7 +65,6 @@ export default function MessageInput({ chatId }: { chatId: string }) {
     setContent("");
     setFiles(null);
   };
-
   return (
     <View style={styles.container}>
       {files != null && files.assets.length > 0 && (

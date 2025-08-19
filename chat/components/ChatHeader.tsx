@@ -13,7 +13,6 @@ export default function ChatHeader({ userId }: { userId: string }) {
     const fetchChatName = async () => {
       try {
         const user = await getUserById(userId);
-        console.log("Fetched user:", user);
         if (user) {
           setChatname(user.username);
         } else {

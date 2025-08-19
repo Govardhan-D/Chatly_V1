@@ -5,11 +5,29 @@ import { supabase } from "../../lib/supabase";
 import React, { useEffect } from "react";
 import MessageTick from "../../chatlist/components/MessageTick";
 
-type Message = Database["public"]["Tables"]["messages"]["Row"];
+import { Gesture, GestureDetector } from "react-native-gesture-handler";
+import Animated, {
+  useAnimatedStyle,
+  useSharedValue,
+} from "react-native-reanimated";
 
+type Message = Database["public"]["Tables"]["messages"]["Row"];
 function MessageBubble({ message }: { message: Message }) {
   const { user } = useAuthStore();
   const isSentByMe = message.senderid === user?.id;
+
+  const position = useSharedValue(0);
+  const animatedStyle = useAnimatedStyle(() => ({
+    transform: [{ translateX: position.value }],
+  }));
+
+  const panGesture = Gesture.Pan()
+    .onUpdate((e) => {
+      position.value = e.translationX;
+    })
+    .onEnd((e) => {
+      position.value = 0;
+    });
 
   const updateMessageStatus = async () => {
     if (message.status != "seen") {
@@ -31,38 +49,42 @@ function MessageBubble({ message }: { message: Message }) {
     }
   }, [message.status]);
   return (
-    <View
-      style={[
-        styles.container,
-        isSentByMe ? styles.sentContainer : styles.receivedContainer,
-      ]}
-    >
-      <View
+    <GestureDetector gesture={panGesture} touchAction="pan-y">
+      <Animated.View
         style={[
-          styles.bubble,
-          isSentByMe ? styles.sentBubble : styles.receivedBubble,
+          styles.container,
+          isSentByMe ? styles.sentContainer : styles.receivedContainer,
+          animatedStyle,
         ]}
       >
-        {message.mediaurl != null && (
-          <Image
-            source={{
-              uri: message.mediaurl,
-            }}
-            style={styles.media}
-          />
-        )}
-        <Text style={styles.text}>{message.content}</Text>
-        <View style={styles.statusContainer}>
-          <Text style={styles.timestamp}>
-            {new Date(message.timestamp).toLocaleTimeString([], {
-              hour: "2-digit",
-              minute: "2-digit",
-            })}
-          </Text>
-          {isSentByMe && <MessageTick status={message.status} />}
+        <View
+          style={[
+            styles.bubble,
+            isSentByMe ? styles.sentBubble : styles.receivedBubble,
+          ]}
+        >
+          {message.mediaurl != null && (
+            <Image
+              source={{
+                uri: message.mediaurl,
+              }}
+              style={styles.media}
+              resizeMode="cover"
+            />
+          )}
+          <Text style={styles.text}>{message.content}</Text>
+          <View style={styles.statusContainer}>
+            <Text style={styles.timestamp}>
+              {new Date(message.timestamp).toLocaleTimeString([], {
+                hour: "2-digit",
+                minute: "2-digit",
+              })}
+            </Text>
+            {isSentByMe && <MessageTick status={message.status} />}
+          </View>
         </View>
-      </View>
-    </View>
+      </Animated.View>
+    </GestureDetector>
   );
 }
 
@@ -112,5 +134,5 @@ const styles = StyleSheet.create({
     color: "#767779",
   },
 });
-const MemoizedMessageBubble = React.memo(MessageBubble);
-export default MemoizedMessageBubble;
+
+export default React.memo(MessageBubble);

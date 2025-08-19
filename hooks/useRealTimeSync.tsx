@@ -17,13 +17,11 @@ export const useRealTimeSync = () => {
 
   useEffect(() => {
     const hydrateMessages = async () => {
-      console.log("Hydrating messages...");
       try {
         // Local storage sync (MMKV)
         const cached = mmkvStorage.getString(STORAGE_KEY);
         if (cached) {
           const localMessages = JSON.parse(cached) as Message[];
-          console.log("Local messages found");
           setMessages(localMessages);
         }
 
@@ -69,12 +67,6 @@ export const useRealTimeSync = () => {
                 newMessage.receiverid === user.id &&
                 newMessage.status !== "delivered"
               ) {
-                console.log(
-                  "Attempting to update:",
-                  newMessage.messageid,
-                  newMessage.status
-                );
-
                 supabase
                   .from("messages")
                   .update({ status: "delivered" })

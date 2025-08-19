@@ -1,4 +1,3 @@
-import { supabase } from "../../lib/supabase";
 import { useEffect, useRef, useState } from "react";
 import { Database } from "../../supabase-types";
 import {
@@ -12,25 +11,38 @@ import MessageBubble from "./Bubble";
 import { FlashList } from "@shopify/flash-list";
 import { useMessageStore } from "../../stores/MessageStore";
 import { images } from "../../assets/images/images";
+import { powersync } from "../../lib/powersync/system";
 
-type Message = Database["public"]["Tables"]["messages"]["Row"];
+type MessageRecord = Database["public"]["Tables"]["messages"]["Row"];
 
 interface ChatHistoryProps {
   chatId: string;
 }
 
-export default function ChatHistory({ chatId }: ChatHistoryProps) {
-  const listRef = useRef<FlashList<Message>>(null);
+function useMessagesForChat(chatId: string) {
+  const [messages, setMessages] = useState<MessageRecord[]>([]);
 
-  const allMessages = useMessageStore((state) => state.messages);
-  const messages = allMessages.filter(
-    (msg) => msg.senderid === chatId || msg.receiverid === chatId
-  );
-  if (messages.length > 0) {
-    setTimeout(() => {
-      listRef.current?.scrollToEnd({ animated: true });
-    }, 100);
-  }
+  useEffect(() => {
+    const subscription = powersync.watch(
+      "SELECT * FROM messages WHERE senderid = ? OR receiverid = ? ORDER BY timestamp ASC",
+      [chatId, chatId],
+      {
+        onResult: (results) => {
+          setMessages(results.rows?._array || []);
+        },
+        onError: (error) => {
+          console.error("Error watching messages:", error);
+        },
+      }
+    );
+  }, [chatId]);
+
+  return messages;
+}
+
+export default function ChatHistory({ chatId }: ChatHistoryProps) {
+  const listRef = useRef<FlashList<MessageRecord>>(null);
+  const messages = useMessagesForChat(chatId);
 
   return (
     <ImageBackground
@@ -39,7 +51,7 @@ export default function ChatHistory({ chatId }: ChatHistoryProps) {
       style={{ flex: 1, justifyContent: "center", alignItems: "center" }}
     >
       <View style={styles.container}>
-        {allMessages.length == 0 ? (
+        {messages.length === 0 ? (
           <Text>No Messages</Text>
         ) : (
           <FlashList
@@ -48,7 +60,8 @@ export default function ChatHistory({ chatId }: ChatHistoryProps) {
             data={messages}
             renderItem={({ item }) => <MessageBubble message={item} />}
             keyExtractor={(item) => item.messageid.toString()}
-            estimatedItemSize={65}
+            estimatedItemSize={200}
+            initialScrollIndex={messages.length > 0 ? messages.length - 1 : 0}
           />
         )}
       </View>
